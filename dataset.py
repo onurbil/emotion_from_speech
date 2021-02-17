@@ -1,8 +1,7 @@
 import os
 import numpy as np
-from scipy.io import wavfile
 from pathlib import Path
-
+import librosa
 
 """
 Folder structure:
@@ -22,39 +21,53 @@ Folder structure must be as following:
 └─── ...
 """
 
-DATA_FOLDER = Path('../TESS Toronto emotional speech set data')
+# Parameters:
+sampling_rate=24414
+mfcc_number = 20
 
-class_dir = os.listdir(DATA_FOLDER)
+# Data path:
+data_folder = Path('../TESS Toronto emotional speech set data')
+class_dir = os.listdir(data_folder)
 
-wav_array = []
-broken_files = []
+file_class = []
+features = np.zeros((0,mfcc_number,0))
 for folder in class_dir:
     
     cls =  folder.split('_',1)[-1]
-    cls_path = os.path.join(DATA_FOLDER, folder)
+    cls_path = os.path.join(data_folder, folder)
     
     data_row = []
     for file in os.listdir(cls_path):
         if file.endswith('.wav'):
             
             file_path = os.path.join(cls_path, file)
-            try:
-                sample_rate, data = wavfile.read(file_path)
-            except: 
-                broken_files.append(file_path)
-                continue
-                
-            wav_array.append([file,cls, sample_rate, data])
+            data, sr = librosa.load(file_path, sr=None)            
+            file_class.append([file,cls])
             
+            if sr != sampling_rate:
+                # This loop is for OAF_food_fear.wav, which has sr of 96000 Hz.
+                data, sr = librosa.load(file_path, sr=sampling_rate)
+                
+            mfccs = librosa.feature.mfcc(data, sr=sr, n_mfcc=20)
+            # Concatenate:
+            if features.shape[-1]>=mfccs.shape[-1]:
+                padded = np.zeros((features.shape[1],features.shape[-1]))
+                padded[:,:mfccs.shape[-1]] = mfccs
+                mfccs = padded
+            else:
+                padded = np.zeros((features.shape[0],features.shape[1],mfccs.shape[-1]))
+                padded[:,:,:features.shape[-1]] = features
+                features = padded
+            mfccs = np.expand_dims(mfccs, axis=0)
+            features = np.concatenate((features,mfccs),axis=0)
+                
+file_class = np.array(file_class)
 
-"""
-wav_array: [file_name, class, sample_rate, data_array]
-"""
-wav_array = np.array(wav_array,dtype=object)
-print(wav_array)
-print(wav_array.shape)
-print(broken_files)
+print(features)
+print(features.shape)
 
+print(file_class)
+print(file_class.shape)
             
             
 
