@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from pathlib import Path
+from paths import DATA_FOLDER
 import librosa
 
 """
@@ -26,15 +27,15 @@ sampling_rate=24414
 mfcc_number = 20
 
 # Data path:
-data_folder = Path('../TESS Toronto emotional speech set data')
-class_dir = os.listdir(data_folder)
+# DATA_FOLDER = Path('../TESS Toronto emotional speech set data')
+class_dir = os.listdir(DATA_FOLDER)
 
 file_class = []
 features = np.zeros((0,mfcc_number,0))
 for folder in class_dir:
     
     cls =  folder.split('_',1)[-1]
-    cls_path = os.path.join(data_folder, folder)
+    cls_path = os.path.join(DATA_FOLDER, folder)
     
     data_row = []
     for file in os.listdir(cls_path):
@@ -68,7 +69,7 @@ print(features.shape)
 
 print(file_class)
 print(file_class.shape)
-            
+
             
 
 
