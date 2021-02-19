@@ -17,8 +17,10 @@ y = keras.utils.to_categorical(y_cat, len(set(y_cat)))
 
 
 x = data_list[:,-1]
+x = [arr.tolist() for arr in x]
 x=x[:32]
 y=y[:32]
+
 x = tf.ragged.constant(x)
 print(x.bounding_shape())
 print(x.shape)
