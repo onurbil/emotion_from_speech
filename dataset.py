@@ -48,13 +48,14 @@ for folder in class_dir:
                 data, sr = librosa.load(file_path, sr=sampling_rate)
                 
             mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=20)
+            
             # For later first order and second order derivatives. 
             # Energy not implemented. Chroma for music bc of harmonic, melodic features.
             # mfcc_delta = librosa.feature.delta(mfcc, order=1)
             # mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
             data_list.append([file,cls,mfcc])
 
-                
+print(data_list)                
 data_list = np.array(data_list, dtype=object)
 np.save('data_list.npy', data_list)
 
