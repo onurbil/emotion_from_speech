@@ -5,15 +5,8 @@ import torch
 import torch.nn.utils.rnn as rnn_utils 
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.utils.data.sampler import SubsetRandomSampler
+import torch.nn.functional as F
 
-from debugging_tools import *
-
-
-
-
-def to_categorical(y, num_classes):
-    """ 1-hot encodes a tensor: Numpy array must begin from 0."""
-    return np.eye(num_classes, dtype='uint8')[y]
 
 
 class PadSequence:
@@ -21,23 +14,26 @@ class PadSequence:
 
         x=[ix[0] for ix in batch]
         y=[iy[1] for iy in batch]
+        y=torch.LongTensor(y)
+
         padded = rnn_utils.pad_sequence(x, batch_first=True)
         sorted_batch_lengths = [len(p) for p in padded]
         packed = rnn_utils.pack_padded_sequence(padded, sorted_batch_lengths, batch_first=True, enforce_sorted=False)
         return packed, y
 
 
+"""
+Create x and y:
+"""
 data_list = np.load('data_list.npy', allow_pickle=True)
 x = data_list[:,0]
 x = [torch.Tensor(arr) for arr in x]
 
 
-
 y = data_list[:,1]
 le = LabelEncoder()
 le.fit(y)
-y_cat = le.transform(y)
-y = to_categorical(y_cat, len(set(y_cat)))
+y = le.transform(y)
 dataset = list(zip(x,y))
 
 
@@ -50,7 +46,9 @@ shuffle_dataset = True
 random_seed = 42
 
 
-
+"""
+Create train, validation and test sets:
+"""
 indices = list(range(len(dataset)))
 if shuffle_dataset :
     np.random.seed(random_seed)
@@ -71,16 +69,55 @@ test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                             sampler=test_sampler, collate_fn=PadSequence())
 
 
-lstm = torch.nn.LSTM(input_size=20, hidden_size=10, batch_first=True)
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+
+        self.lstm = torch.nn.LSTM(input_size=20, hidden_size=256, batch_first=True)
+        self.fc1 = torch.nn.Linear(256, 128)
+        self.fc2 = torch.nn.Linear(128, 7)
+
+
+    def forward(self, x):
+
+        x, hid = self.lstm(x)
+        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+
+        """
+        Reduce sum here is wrong!!! Used to remove the middle dimension and avoid the error!
+        """
+        x = torch.sum(x, dim=1)
+        
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
+        x = F.log_softmax(x, dim=1)
+        
+        return x
+
+
+"""
+Train model:
+"""
+model = Model()
+loss = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
+
 
 for epoch in range(num_epochs):
+    print(epoch)
     for batch in train_loader:
         x = batch[0]
         y = batch[1]
-        print(x)
-        print(y)
-        lstm(x)
 
+        optimizer.zero_grad()
+        y_pred = model(x)
+        
+        train_loss = loss(y_pred, y)
+        train_loss.backward()
+        optimizer.step()
+        print(train_loss)
 
-# Loss function missing, backward chain and updating weights missing...
 
