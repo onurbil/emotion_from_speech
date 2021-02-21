@@ -4,6 +4,7 @@ from pathlib import Path
 from paths import DATA_FOLDER
 import librosa
 
+
 """
 Folder structure:
 Folder structure must be as following:
@@ -33,12 +34,13 @@ class_dir = os.listdir(DATA_FOLDER)
 data_list = []
 for folder in class_dir:
     
-    cls =  folder.split('_',1)[-1]
     cls_path = os.path.join(DATA_FOLDER, folder)
     
     data_row = []
     for file in os.listdir(cls_path):
         if file.endswith('.wav'):
+            
+            cls = Path(file).stem.split('_',2)[-1]
             
             file_path = os.path.join(cls_path, file)
             data, sr = librosa.load(file_path, sr=None)            
@@ -48,12 +50,15 @@ for folder in class_dir:
                 data, sr = librosa.load(file_path, sr=sampling_rate)
                 
             mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=20)
+            # Bring to sequence x number of coefficients for LSTM:
+            mfcc=mfcc.T
+
             
             # For later first order and second order derivatives. 
             # Energy not implemented. Chroma for music bc of harmonic, melodic features.
             # mfcc_delta = librosa.feature.delta(mfcc, order=1)
             # mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
-            data_list.append([file,cls,mfcc])
+            data_list.append([mfcc,cls])
 
 print(data_list)                
 data_list = np.array(data_list, dtype=object)
