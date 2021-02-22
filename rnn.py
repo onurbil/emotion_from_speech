@@ -124,7 +124,10 @@ for epoch in range(num_epochs):
     accuracy = 100 * correct/total
     print('Train Accuracy: {}%'.format('%.4f' % accuracy))
 
-
+    
+    """
+    Validation part:
+    """
     model.eval()
     total, correct = 0, 0
     for batch in valid_loader:
