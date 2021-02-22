@@ -41,7 +41,7 @@ dataset = list(zip(x,y))
 Parameters:
 """
 batch_size=64
-num_epochs = 1
+num_epochs = 20
 shuffle_dataset = True
 random_seed = 42
 
@@ -82,13 +82,10 @@ class Model(torch.nn.Module):
     def forward(self, x):
 
         x, hid = self.lstm(x)
-        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
 
-        """
-        Reduce sum here is wrong!!! Used to remove the middle dimension and avoid the error!
-        """
-        x = torch.sum(x, dim=1)
-        
+        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+        x = x[:,-1,:]
+                
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
