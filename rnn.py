@@ -41,7 +41,7 @@ dataset = list(zip(x,y))
 Parameters:
 """
 batch_size=64
-num_epochs = 20
+num_epochs = 5
 shuffle_dataset = True
 random_seed = 42
 
@@ -104,7 +104,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
 
 
 for epoch in range(num_epochs):
-    print(epoch)
+    model.train()
+    total, correct = 0, 0
     for batch in train_loader:
         x_train = batch[0]
         y_train = batch[1]
@@ -115,11 +116,28 @@ for epoch in range(num_epochs):
         train_loss = loss(y_train_pred, y_train)
         train_loss.backward()
         optimizer.step()
-        print(train_loss)
+        print('Epoch {}:  Train loss: {}'.format(epoch, train_loss.item()))
+        
+        _, y_train_pred = torch.max(y_train_pred.data, 1)
+        total += y_train_pred.size(0)
+        correct += (y_train_pred == y_train).sum().item()
+    accuracy = 100 * correct/total
+    print('Train Accuracy: {}%'.format('%.4f' % accuracy))
 
-"""
-Validation is missing...
-"""
+
+    model.eval()
+    total, correct = 0, 0
+    for batch in valid_loader:
+        x_valid = batch[0]
+        y_valid = batch[1]
+        y_valid_pred = model(x_valid)
+        _, y_valid_pred = torch.max(y_valid_pred.data, 1)
+        
+        total += y_valid_pred.size(0)
+        correct += (y_valid_pred == y_valid).sum().item()
+    accuracy = 100 * correct/total
+    print('Validation Accuracy: {}%\n'.format('%.4f' % accuracy))
+
 
 
 """
@@ -136,4 +154,5 @@ with torch.no_grad():
         
         total += y_test_pred.size(0)
         correct += (y_test_pred == y_test).sum().item()
-    print('Test Accuracy: ', 100 * correct / total, '%')
+    accuracy = 100 * correct/total
+    print('Test Accuracy: {}%'.format('%.4f' % accuracy))
