@@ -49,14 +49,17 @@ for folder in class_dir:
                 # This loop is for OAF_food_fear.wav, which has sr of 96000 Hz.
                 data, sr = librosa.load(file_path, sr=sampling_rate)
                 
-            mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=20).T
-
-        
-            # For later first order and second order and energy features. 
-            # mfcc_delta = librosa.feature.delta(mfcc, order=1).T
-            # mfcc_delta2 = librosa.feature.delta(mfcc, order=2).T
-            # energy = librosa.feature.rms(data).T
-            data_list.append([mfcc,cls])
+            mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=20)
+            # First order and second order and energy features. 
+            mfcc_delta = librosa.feature.delta(mfcc, order=1)
+            mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
+            energy = librosa.feature.rms(data)
+                        
+            features = np.concatenate((mfcc,mfcc_delta,mfcc_delta2,energy), axis=0)
+            # Bring to sample x sequence x features for LSTM:
+            features = features.T
+            
+            data_list.append([features,cls])
 
 print(data_list)                
 data_list = np.array(data_list, dtype=object)

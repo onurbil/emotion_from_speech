@@ -44,6 +44,7 @@ batch_size=64
 num_epochs = 5
 shuffle_dataset = True
 random_seed = 42
+feature_num = x[0].shape[1]
 
 
 """
@@ -74,7 +75,7 @@ class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
 
-        self.lstm = torch.nn.LSTM(input_size=20, hidden_size=256, batch_first=True)
+        self.lstm = torch.nn.LSTM(input_size=feature_num, hidden_size=256, batch_first=True)
         self.fc1 = torch.nn.Linear(256, 128)
         self.fc2 = torch.nn.Linear(128, 7)
 
