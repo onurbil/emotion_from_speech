@@ -8,6 +8,13 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn.functional as F
 
 
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+    print('Current device:', torch.cuda.get_device_name(device))
+else:
+    print('Failed to find GPU. Will use CPU.')
+    device = 'cpu'
+
 
 class PadSequence:
     def __call__(self, batch):
@@ -41,7 +48,7 @@ dataset = list(zip(x,y))
 Parameters:
 """
 batch_size=64
-num_epochs = 5
+num_epochs = 30
 shuffle_dataset = True
 random_seed = 42
 feature_num = x[0].shape[1]
@@ -100,6 +107,7 @@ class Model(torch.nn.Module):
 Train model:
 """
 model = Model()
+model = model.to(device)
 loss = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
 
@@ -108,8 +116,8 @@ for epoch in range(num_epochs):
     model.train()
     total, correct = 0, 0
     for batch in train_loader:
-        x_train = batch[0]
-        y_train = batch[1]
+        x_train = batch[0].to(device)
+        y_train = batch[1].to(device)
 
         optimizer.zero_grad()
         y_train_pred = model(x_train)
@@ -132,8 +140,8 @@ for epoch in range(num_epochs):
     model.eval()
     total, correct = 0, 0
     for batch in valid_loader:
-        x_valid = batch[0]
-        y_valid = batch[1]
+        x_valid = batch[0].to(device)
+        y_valid = batch[1].to(device)
         y_valid_pred = model(x_valid)
         _, y_valid_pred = torch.max(y_valid_pred.data, 1)
         
@@ -151,8 +159,8 @@ total, correct = 0, 0
 with torch.no_grad():
     model.eval()
     for batch in test_loader:
-        x_test = batch[0]
-        y_test = batch[1]
+        x_test = batch[0].to(device)
+        y_test = batch[1].to(device)
         y_test_pred = model(x_test)
         _, y_test_pred = torch.max(y_test_pred.data, 1)
         
