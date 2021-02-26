@@ -131,9 +131,11 @@ def test_model(model, test_loader, classes, device, verbose=1):
 
 def test_hyper_parameters(num_runs, dataset_path, batch_size,
                           num_epochs, learning_rate, weight_decay,
-                          model_cls, model_args, device):
-
+                          model_cls, model_args, device, verbose=1):
     train_loader, valid_loader, test_loader, feature_num, classes = load_dataset(dataset_path, batch_size)
+    model_args['feature_num'] = feature_num
+    model_args['classes'] = classes
+
     loss = torch.nn.CrossEntropyLoss()
 
     accuracies = []
@@ -141,8 +143,67 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
         model = model_cls(**model_args)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-        train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device)
-        accuracy = test_model(model, test_loader, classes, device, verbose=1)
+        train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, verbose)
+        accuracy = test_model(model, test_loader, classes, device, verbose)
         accuracies.append(accuracy)
 
     return np.mean(accuracies)
+
+
+if __name__ == '__main__':
+    import os
+    from training import test_hyper_parameters
+    import torch
+
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        print('Current device:', torch.cuda.get_device_name(device))
+    else:
+        print('Failed to find GPU. Will use CPU.')
+        device = 'cpu'
+
+    dataset_path = os.path.join('data_list.npy')
+
+
+    class Model(torch.nn.Module):
+        def __init__(self, num_layers, feature_num, hidden_size, linear_size, classes):
+            super(Model, self).__init__()
+
+            self.lstm = torch.nn.LSTM(num_layers=num_layers, input_size=feature_num, hidden_size=hidden_size,
+                                      batch_first=True)
+            self.fc1 = torch.nn.Linear(hidden_size, linear_size)
+            self.fc2 = torch.nn.Linear(linear_size, classes)
+
+        def forward(self, x):
+            x, hid = self.lstm(x)
+
+            x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+            x = x[:, -1, :]
+
+            x = self.fc1(x)
+            x = F.relu(x)
+            x = self.fc2(x)
+            x = F.relu(x)
+            x = F.log_softmax(x, dim=1)
+
+            return x
+
+
+    """
+    Parameters:
+    """
+    batch_size = 64
+    num_epochs = 3
+    learning_rate = 0.001
+    weight_decay = 0.01
+    model_args = {
+        'num_layers': 1,
+        'hidden_size': 256,
+        'linear_size': 128,
+    }
+
+    mean_accuracy = test_hyper_parameters(num_runs=3, dataset_path=dataset_path, batch_size=batch_size,
+                                          num_epochs=num_epochs, learning_rate=learning_rate, weight_decay=weight_decay,
+                                          model_cls=Model, model_args=model_args, device=device, verbose=0)
+
+    print(mean_accuracy)
