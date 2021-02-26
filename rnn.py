@@ -47,12 +47,12 @@ dataset = list(zip(x,y))
 """
 Parameters:
 """
-batch_size=64
-num_epochs = 30
+batch_size = 64
+num_epochs = 5
 shuffle_dataset = True
 random_seed = 42
 feature_num = x[0].shape[1]
-
+classes = 7
 
 """
 Create train, validation and test sets:
@@ -84,7 +84,7 @@ class Model(torch.nn.Module):
 
         self.lstm = torch.nn.LSTM(input_size=feature_num, hidden_size=256, batch_first=True)
         self.fc1 = torch.nn.Linear(256, 128)
-        self.fc2 = torch.nn.Linear(128, 7)
+        self.fc2 = torch.nn.Linear(128, classes)
 
 
     def forward(self, x):
@@ -155,7 +155,8 @@ for epoch in range(num_epochs):
 """
 Test model:
 """
-total, correct = 0, 0
+class_correct = [0] * classes
+class_total = [0] * classes
 with torch.no_grad():
     model.eval()
     for batch in test_loader:
@@ -164,7 +165,18 @@ with torch.no_grad():
         y_test_pred = model(x_test)
         _, y_test_pred = torch.max(y_test_pred.data, 1)
         
-        total += y_test_pred.size(0)
-        correct += (y_test_pred == y_test).sum().item()
-    accuracy = 100 * correct/total
-    print('Test Accuracy: {}%'.format('%.4f' % accuracy))
+        tp = (y_test_pred == y_test).squeeze()
+
+
+        for i in range(y_test_pred.size(0)):
+            
+            label = y_test[i].item()
+            class_correct[label] += tp[i].item()
+            class_total[label] += 1
+        
+
+for i in range(classes):
+    print('Accuracy of %1s: %2d %%' % (i, 100*class_correct[i]/class_total[i]))
+
+accuracy = 100 * sum(class_correct)/sum(class_total)
+print('Test Accuracy: {}%'.format('%.4f' % accuracy))
