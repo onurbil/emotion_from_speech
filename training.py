@@ -50,7 +50,7 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
                                               sampler=test_sampler, collate_fn=PadSequence())
 
     feature_num = x[0].shape[1]
-    classes = np.max(y) + 1
+    classes = len(list(le.classes_))
     return train_loader, valid_loader, test_loader, feature_num, classes
 
 
@@ -120,7 +120,8 @@ def test_model(model, test_loader, classes, device, verbose=1):
 
         if verbose >= 2:
             for i in range(classes):
-                print('Accuracy of %1s: %2d %%' % (i, 100 * class_correct[i] / class_total[i]))
+                print('Test Accuracy of {} {}: {}'.format(i, le.inverse_transform([i])[0], 
+                                                    100*class_correct[i]/class_total[i]))
 
         accuracy = sum(class_correct) / sum(class_total)
         if verbose >= 1:

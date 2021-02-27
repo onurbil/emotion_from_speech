@@ -51,7 +51,7 @@ num_epochs = 20
 shuffle_dataset = True
 random_seed = 42
 feature_num = x[0].shape[1]
-class_num = len(list(le.classes_))
+classes = len(list(le.classes_))
 
 """
 Create train, validation and test sets:
@@ -83,7 +83,7 @@ class Model(torch.nn.Module):
 
         self.lstm = torch.nn.LSTM(input_size=feature_num, hidden_size=256, batch_first=True)        
         self.fc1 = torch.nn.Linear(256, 128)
-        self.fc2 = torch.nn.Linear(128, class_num)
+        self.fc2 = torch.nn.Linear(128, classes)
 
 
     def forward(self, x):
@@ -154,8 +154,8 @@ for epoch in range(num_epochs):
 """
 Test model:
 """
-class_correct = [0] * class_num
-class_total = [0] * class_num
+class_correct = [0] * classes
+class_total = [0] * classes
 with torch.no_grad():
     model.eval()
     for batch in test_loader:
@@ -173,7 +173,7 @@ with torch.no_grad():
             class_total[label] += 1
         
         
-for i in range(class_num):
+for i in range(classes):
     print('Test Accuracy of {} {}: {}'.format(i, le.inverse_transform([i])[0], 
                                         100*class_correct[i]/class_total[i]))
 
