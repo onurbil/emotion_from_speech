@@ -50,8 +50,7 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
                                               sampler=test_sampler, collate_fn=PadSequence())
 
     feature_num = x[0].shape[1]
-    classes = len(list(le.classes_))
-    return train_loader, valid_loader, test_loader, feature_num, classes
+    return train_loader, valid_loader, test_loader, feature_num, le
 
 
 def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, verbose=1):
@@ -98,7 +97,7 @@ def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, 
             print('Epoch {}:  Validation Accuracy: {}%\n'.format(epoch, '%.4f' % accuracy))
 
 
-def test_model(model, test_loader, classes, device, verbose=1):
+def test_model(model, test_loader, classes, le, device, verbose=1):
     model = model.to(device)
 
     class_correct = [0] * classes
@@ -118,37 +117,53 @@ def test_model(model, test_loader, classes, device, verbose=1):
                 class_correct[label] += tp[i].item()
                 class_total[label] += 1
 
-        if verbose >= 2:
-            for i in range(classes):
-                print('Test Accuracy of {} {}: {}'.format(i, le.inverse_transform([i])[0], 
-                                                    100*class_correct[i]/class_total[i]))
+        classes_accuracies = []
+        for i in range(classes):
+            class_accuracy = class_correct[i] / class_total[i]
+            classes_accuracies.append(class_accuracy)
+            if verbose >= 2:
+                print('Test Accuracy of {} {}: {}'.format(i, le.inverse_transform([i])[0], 100 * class_accuracy))
 
         accuracy = sum(class_correct) / sum(class_total)
         if verbose >= 1:
             print('Test Accuracy: {}%'.format('%.4f' % (100 * accuracy)))
 
-    return accuracy
+    return accuracy, classes_accuracies
 
 
 def test_hyper_parameters(num_runs, dataset_path, batch_size,
                           num_epochs, learning_rate, weight_decay,
                           model_cls, model_args, device, verbose=1):
-    train_loader, valid_loader, test_loader, feature_num, classes = load_dataset(dataset_path, batch_size)
+    train_loader, valid_loader, test_loader, feature_num, le = load_dataset(dataset_path, batch_size)
+    classes = len(list(le.classes_))
+
     model_args['feature_num'] = feature_num
     model_args['classes'] = classes
 
     loss = torch.nn.CrossEntropyLoss()
 
     accuracies = []
+    class_accuracies = []
     for run in range(num_runs):
         model = model_cls(**model_args)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
         train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, verbose)
-        accuracy = test_model(model, test_loader, classes, device, verbose)
+        accuracy, class_acc = test_model(model, test_loader, classes, le, device, verbose)
         accuracies.append(accuracy)
+        class_accuracies.append(class_acc)
 
-    return np.mean(accuracies)
+    if verbose >= 1:
+        print('Test Accuracy	0-Accuracy	1-Accuracy	2-Accuracy	3-Accuracy	4-Accuracy	5-Accuracy	6-Accuracy')
+        for run in range(num_runs):
+            print_string = f'{accuracies[run]}'
+            class_acc = class_accuracies[run]
+            for acc in class_acc:
+                print_string += f'	{acc}'
+
+            print(print_string)
+
+    return np.mean(accuracies), accuracies, class_accuracies
 
 
 if __name__ == '__main__':
@@ -203,8 +218,12 @@ if __name__ == '__main__':
         'linear_size': 128,
     }
 
-    mean_accuracy = test_hyper_parameters(num_runs=3, dataset_path=dataset_path, batch_size=batch_size,
-                                          num_epochs=num_epochs, learning_rate=learning_rate, weight_decay=weight_decay,
-                                          model_cls=Model, model_args=model_args, device=device, verbose=0)
+    mean_accuracy, accuracies, class_accuracies = test_hyper_parameters(num_runs=3, dataset_path=dataset_path,
+                                                                        batch_size=batch_size,
+                                                                        num_epochs=num_epochs,
+                                                                        learning_rate=learning_rate,
+                                                                        weight_decay=weight_decay,
+                                                                        model_cls=Model, model_args=model_args,
+                                                                        device=device, verbose=1)
 
     print(mean_accuracy)
