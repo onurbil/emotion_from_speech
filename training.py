@@ -101,7 +101,7 @@ def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, 
         """	
         Early stopping:
         """
-        if max_val_acc <= accuracy:
+        if max_val_acc < accuracy:
             max_val_acc = accuracy
             weights = copy.deepcopy(model.state_dict())
             stopping = 0
