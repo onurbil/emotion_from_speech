@@ -7,6 +7,9 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 import copy
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 class PadSequence:
     def __call__(self, batch):
@@ -115,11 +118,26 @@ def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, 
             break
 
 
+def createConfMatrix(y_pred, y_test, le):
+
+    cm = confusion_matrix(y_test, y_pred)
+    ax= plt.subplot()
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.title('Confusion matrix')
+    plt.xlabel('Predicted label')
+    plt.ylabel('Actual label')
+    ax.set_xticklabels([''] + le.classes_,rotation=90)
+    ax.set_yticklabels([''] + le.classes_, rotation=0)
+    plt.show()
+
+
 def test_model(model, test_loader, classes, le, device, verbose=1):
     model = model.to(device)
 
     class_correct = [0] * classes
     class_total = [0] * classes
+    all_test_pred = []
+    all_labels = []
     with torch.no_grad():
         model.eval()
         for batch in test_loader:
@@ -129,6 +147,8 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
             _, y_test_pred = torch.max(y_test_pred.data, 1)
 
             tp = (y_test_pred == y_test).squeeze()
+            all_test_pred.extend(y_test_pred)
+            all_labels.extend(y_test)
 
             for i in range(y_test_pred.size(0)):
                 label = y_test[i].item()
@@ -142,9 +162,11 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
             if verbose >= 2:
                 print('Test Accuracy of {} {}: {}'.format(i, le.inverse_transform([i])[0], 100 * class_accuracy))
 
+
         accuracy = sum(class_correct) / sum(class_total)
         if verbose >= 1:
             print('Test Accuracy: {}%'.format('%.4f' % (100 * accuracy)))
+            createConfMatrix(all_test_pred,all_labels,le)
 
     return accuracy, classes_accuracies
 
@@ -232,6 +254,7 @@ if __name__ == '__main__':
     patience = 1
     learning_rate = 0.001
     weight_decay = 0.01
+    verbose = 2
     model_args = {
         'num_layers': 1,
         'hidden_size': 256,
@@ -244,6 +267,6 @@ if __name__ == '__main__':
                                                                         learning_rate=learning_rate,
                                                                         weight_decay=weight_decay,
                                                                         model_cls=Model, model_args=model_args,
-                                                                        device=device, patience=patience, verbose=1)
+                                                                        device=device, patience=patience, verbose=verbose)
 
     print(mean_accuracy)

@@ -47,7 +47,7 @@ dataset = list(zip(x,y))
 Parameters:
 """
 batch_size = 64
-num_epochs = 20
+num_epochs = 1
 shuffle_dataset = True
 random_seed = 42
 feature_num = x[0].shape[1]
@@ -81,9 +81,9 @@ class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
 
-        self.lstm = torch.nn.LSTM(input_size=feature_num, hidden_size=256, batch_first=True)        
-        self.fc1 = torch.nn.Linear(256, 128)
-        self.fc2 = torch.nn.Linear(128, classes)
+        self.lstm = torch.nn.LSTM(input_size=feature_num, hidden_size=8, batch_first=True)        
+        self.fc1 = torch.nn.Linear(8, 4)
+        self.fc2 = torch.nn.Linear(4, classes)
 
 
     def forward(self, x):
@@ -150,12 +150,32 @@ for epoch in range(num_epochs):
     print('Validation Accuracy: {}%\n'.format('%.4f' % accuracy))
 
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
+def createConfMatrix(y_pred, y_test, le):
+
+    cm = confusion_matrix(y_test, y_pred)
+    ax= plt.subplot()
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.title('Confusion matrix')
+    plt.xlabel('Predicted label')
+    plt.ylabel('Actual label')
+    ax.set_xticklabels([''] + le.classes_,rotation=90)
+    ax.set_yticklabels([''] + le.classes_, rotation=0)
+    plt.show()
+
+
 
 """
 Test model:
 """
 class_correct = [0] * classes
 class_total = [0] * classes
+all_test_pred = []
+all_labels = []
+
 with torch.no_grad():
     model.eval()
     for batch in test_loader:
@@ -165,6 +185,8 @@ with torch.no_grad():
         _, y_test_pred = torch.max(y_test_pred.data, 1)
         
         tp = (y_test_pred == y_test).squeeze()
+        all_test_pred.extend(y_test_pred)
+        all_labels.extend(y_test)
 
         for i in range(y_test_pred.size(0)):
             
@@ -179,3 +201,8 @@ for i in range(classes):
 
 accuracy = 100 * sum(class_correct)/sum(class_total)
 print('Test Accuracy: {}%'.format('%.4f' % accuracy))
+
+
+createConfMatrix(all_test_pred,all_labels,le)
+
+
