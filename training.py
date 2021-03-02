@@ -6,7 +6,7 @@ import torch.nn.utils.rnn as rnn_utils
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
-
+import copy
 
 class PadSequence:
     def __call__(self, batch):
@@ -53,7 +53,9 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
     return train_loader, valid_loader, test_loader, feature_num, le
 
 
-def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, verbose=1):
+def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, patience, verbose=1):
+    stopping = 0
+    max_val_acc = 0
     model = model.to(device)
 
     for epoch in range(num_epochs):
@@ -96,6 +98,22 @@ def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, 
             accuracy = 100 * correct / total
             print('Epoch {}:  Validation Accuracy: {}%\n'.format(epoch, '%.4f' % accuracy))
 
+        """	
+        Early stopping:
+        """
+        if max_val_acc <= accuracy:
+            max_val_acc = accuracy
+            weights = copy.deepcopy(model.state_dict())
+            stopping = 0
+        else:
+            stopping = stopping + 1
+
+        if stopping == patience:
+            print('Early stopping...')
+            print('Restoring best weights')
+            model.load_state_dict(weights)
+            break
+
 
 def test_model(model, test_loader, classes, le, device, verbose=1):
     model = model.to(device)
@@ -133,7 +151,7 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
 
 def test_hyper_parameters(num_runs, dataset_path, batch_size,
                           num_epochs, learning_rate, weight_decay,
-                          model_cls, model_args, device, verbose=1):
+                          model_cls, model_args, device, patience, verbose=1):
     train_loader, valid_loader, test_loader, feature_num, le = load_dataset(dataset_path, batch_size)
     classes = len(list(le.classes_))
 
@@ -148,13 +166,14 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
         model = model_cls(**model_args)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-        train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, verbose)
+        train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, device, patience, verbose)
         accuracy, class_acc = test_model(model, test_loader, classes, le, device, verbose)
         accuracies.append(accuracy)
         class_accuracies.append(class_acc)
 
     if verbose >= 1:
-        print('Test Accuracy	0-Accuracy	1-Accuracy	2-Accuracy	3-Accuracy	4-Accuracy	5-Accuracy	6-Accuracy')
+        print(
+            'Test Accuracy	0-Accuracy	1-Accuracy	2-Accuracy	3-Accuracy	4-Accuracy	5-Accuracy	6-Accuracy')
         for run in range(num_runs):
             print_string = f'{accuracies[run]}'
             class_acc = class_accuracies[run]
@@ -210,6 +229,7 @@ if __name__ == '__main__':
     """
     batch_size = 64
     num_epochs = 3
+    patience = 1
     learning_rate = 0.001
     weight_decay = 0.01
     model_args = {
@@ -224,6 +244,6 @@ if __name__ == '__main__':
                                                                         learning_rate=learning_rate,
                                                                         weight_decay=weight_decay,
                                                                         model_cls=Model, model_args=model_args,
-                                                                        device=device, verbose=1)
+                                                                        device=device, patience=patience, verbose=1)
 
     print(mean_accuracy)
