@@ -9,7 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 class LSTM(torch.nn.Module):
     def __init__(self, num_layers, feature_num, hidden_size, linear_size, classes):
-        super(Model, self).__init__()
+        super(LSTM, self).__init__()
 
         self.lstm = torch.nn.LSTM(num_layers=num_layers, input_size=feature_num, hidden_size=hidden_size,
                                   batch_first=True)
