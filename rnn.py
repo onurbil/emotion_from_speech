@@ -154,7 +154,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-def createConfMatrix(y_pred, y_test, le):
+def plot_conf_matrix(y_pred, y_test, le):
 
     cm = confusion_matrix(y_test, y_pred)
     ax= plt.subplot()
@@ -203,6 +203,6 @@ accuracy = 100 * sum(class_correct)/sum(class_total)
 print('Test Accuracy: {}%'.format('%.4f' % accuracy))
 
 
-createConfMatrix(all_test_pred,all_labels,le)
+plot_conf_matrix(all_test_pred,all_labels,le)
 
 

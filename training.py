@@ -118,7 +118,7 @@ def train_model(model, num_epochs, loss, optimizer, train_loader, valid_loader, 
             break
 
 
-def createConfMatrix(y_pred, y_test, le):
+def plot_conf_matrix(y_pred, y_test, le):
 
     cm = confusion_matrix(y_test, y_pred)
     ax= plt.subplot()
@@ -166,7 +166,7 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
         accuracy = sum(class_correct) / sum(class_total)
         if verbose >= 1:
             print('Test Accuracy: {}%'.format('%.4f' % (100 * accuracy)))
-            createConfMatrix(all_test_pred,all_labels,le)
+            plot_conf_matrix(all_test_pred,all_labels,le)
 
     return accuracy, classes_accuracies
 
