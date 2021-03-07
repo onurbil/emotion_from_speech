@@ -212,7 +212,7 @@ if __name__ == '__main__':
     from training import load_dataset
     from training import train_model
     from training import test_hyper_parameters
-    from models import LSTM
+    from models import LSTM, GRU, VanillaRNN
 
     if torch.cuda.is_available():
         device = torch.cuda.current_device()
@@ -227,13 +227,14 @@ if __name__ == '__main__':
     num_runs = 3
     patience = 20
     batch_size = 64
-    num_epochs = 300
+    num_epochs = 2
     learning_rate = 0.001
     weight_decay = 0.01
     model_args = {
         'num_layers': 1,
         'hidden_size': 256,
         'linear_size': 128,
+        'bidirectional': True,
     }
 
     mean_accuracy, accuracies, class_accuracies = test_hyper_parameters(num_runs=num_runs, dataset_path=dataset_path,
@@ -241,7 +242,7 @@ if __name__ == '__main__':
                                                                         num_epochs=num_epochs,
                                                                         learning_rate=learning_rate,
                                                                         weight_decay=weight_decay,
-                                                                        model_cls=LSTM, model_args=model_args,
+                                                                        model_cls=VanillaRNN, model_args=model_args,
                                                                         device=device, patience=patience, verbose=1)
 
     print(mean_accuracy)
