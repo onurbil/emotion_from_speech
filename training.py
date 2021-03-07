@@ -147,8 +147,8 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
             _, y_test_pred = torch.max(y_test_pred.data, 1)
 
             tp = (y_test_pred == y_test).squeeze()
-            all_test_pred.extend(y_test_pred)
-            all_labels.extend(y_test)
+            all_test_pred.extend(y_test_pred.cpu().numpy())
+            all_labels.extend(y_test.cpu().numpy())
 
             for i in range(y_test_pred.size(0)):
                 label = y_test[i].item()
@@ -166,7 +166,7 @@ def test_model(model, test_loader, classes, le, device, verbose=1):
         accuracy = sum(class_correct) / sum(class_total)
         if verbose >= 1:
             print('Test Accuracy: {}%'.format('%.4f' % (100 * accuracy)))
-            plot_conf_matrix(all_test_pred,all_labels,le)
+            plot_conf_matrix(np.array(all_test_pred),np.array(all_labels),le)
 
     return accuracy, classes_accuracies
 
@@ -209,8 +209,10 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
 
 if __name__ == '__main__':
     import os
+    from training import load_dataset
+    from training import train_model
     from training import test_hyper_parameters
-    import torch
+    from models import LSTM
 
     if torch.cuda.is_available():
         device = torch.cuda.current_device()
@@ -221,52 +223,25 @@ if __name__ == '__main__':
 
     dataset_path = os.path.join('data_list.npy')
 
-
-    class Model(torch.nn.Module):
-        def __init__(self, num_layers, feature_num, hidden_size, linear_size, classes):
-            super(Model, self).__init__()
-
-            self.lstm = torch.nn.LSTM(num_layers=num_layers, input_size=feature_num, hidden_size=hidden_size,
-                                      batch_first=True)
-            self.fc1 = torch.nn.Linear(hidden_size, linear_size)
-            self.fc2 = torch.nn.Linear(linear_size, classes)
-
-        def forward(self, x):
-            x, hid = self.lstm(x)
-
-            x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
-            x = x[:, -1, :]
-
-            x = self.fc1(x)
-            x = F.relu(x)
-            x = self.fc2(x)
-            x = F.relu(x)
-            x = F.log_softmax(x, dim=1)
-
-            return x
-
-
-    """
-    Parameters:
-    """
+    ## Parameters:
+    num_runs = 3
+    patience = 20
     batch_size = 64
-    num_epochs = 3
-    patience = 1
+    num_epochs = 300
     learning_rate = 0.001
     weight_decay = 0.01
-    verbose = 2
     model_args = {
         'num_layers': 1,
         'hidden_size': 256,
         'linear_size': 128,
     }
 
-    mean_accuracy, accuracies, class_accuracies = test_hyper_parameters(num_runs=3, dataset_path=dataset_path,
+    mean_accuracy, accuracies, class_accuracies = test_hyper_parameters(num_runs=num_runs, dataset_path=dataset_path,
                                                                         batch_size=batch_size,
                                                                         num_epochs=num_epochs,
                                                                         learning_rate=learning_rate,
                                                                         weight_decay=weight_decay,
-                                                                        model_cls=Model, model_args=model_args,
-                                                                        device=device, patience=patience, verbose=verbose)
+                                                                        model_cls=LSTM, model_args=model_args,
+                                                                        device=device, patience=patience, verbose=1)
 
     print(mean_accuracy)
