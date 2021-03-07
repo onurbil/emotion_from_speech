@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 class LSTM(torch.nn.Module):
-    def __init__(self, num_layers, feature_num, hidden_size, bidirectional, linear_size, classes):
+    def __init__(self, num_layers, feature_num, hidden_size, linear_size, classes, bidirectional=False):
         super(LSTM, self).__init__()
 
         linear_input_size = hidden_size * (2 if bidirectional else 1)
