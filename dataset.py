@@ -37,9 +37,9 @@ def calculate_features(data, sr, n_mfcc, order):
     return features
 
 
-if __name__ == '__main__':
+def process_dataset():
     # Parameters:
-    sampling_rate=24414
+    sampling_rate = 24414
     mfcc_number = 20
 
     # Data path:
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         for file in os.listdir(cls_path):
             if file.endswith('.wav'):
 
-                cls = Path(file).stem.split('_',2)[-1]
+                cls = Path(file).stem.split('_', 2)[-1]
 
                 file_path = os.path.join(cls_path, file)
                 data, sr = librosa.load(file_path, sr=None)
@@ -75,11 +75,15 @@ if __name__ == '__main__':
                 # features = features.T
 
                 features = calculate_features(data, sr, n_mfcc=20, order=1)
-                data_list.append([features,cls])
+                data_list.append([features, cls])
 
     print(data_list)
     data_list = np.array(data_list, dtype=object)
     np.save('data_list.npy', data_list)
+
+
+if __name__ == '__main__':
+    process_dataset()
 
             
 
