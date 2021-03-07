@@ -8,12 +8,14 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 class LSTM(torch.nn.Module):
-    def __init__(self, num_layers, feature_num, hidden_size, linear_size, classes):
+    def __init__(self, num_layers, feature_num, hidden_size, bidirectional, linear_size, classes):
         super(LSTM, self).__init__()
 
+        linear_input_size = hidden_size * (2 if bidirectional else 1)
+
         self.lstm = torch.nn.LSTM(num_layers=num_layers, input_size=feature_num, hidden_size=hidden_size,
-                                  batch_first=True)
-        self.fc1 = torch.nn.Linear(hidden_size, linear_size)
+                                  bidirectional=bidirectional, batch_first=True)
+        self.fc1 = torch.nn.Linear(linear_input_size, linear_size)
         self.fc2 = torch.nn.Linear(linear_size, classes)
 
     def forward(self, x):
