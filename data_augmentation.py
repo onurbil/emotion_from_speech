@@ -74,7 +74,6 @@ def augment_and_process_files_from_dir(source_dir, data_filename, augmentation_a
             features = dataset.calculate_features(augmented_audio, sampling_rate, n_mfcc=20, order=1)
             data_list.append([features, cls])
 
-    print(data_list)
     data_list = np.array(data_list, dtype=object)
     np.save(data_filename, data_list)
 
@@ -96,7 +95,8 @@ augumentations = [
 
 for file, name, ratio in augumentations:
     augmentation = load_augmentation(os.path.join('augmentation_sounds', file), sampling_rate)
-    augment_and_save_files_from_dir(DATA_FOLDER, f'../speech_augumented/{name} TESS Toronto',
-                                    augmentation, ratio, sampling_rate, 100)
+    # augment_and_save_files_from_dir(DATA_FOLDER, f'../speech_augumented/{name} TESS Toronto',
+    #                                 augmentation, ratio, sampling_rate, 100)
+    augment_and_process_files_from_dir(DATA_FOLDER, f'data_list_{name}-{ratio}.npy',
+                                       augmentation, ratio, sampling_rate, 100)
 
-# augment_and_process_files_from_dir(DATA_FOLDER, 'data_list_piano-0.5.npy', augmentation, .5, sampling_rate)
