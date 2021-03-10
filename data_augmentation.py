@@ -83,20 +83,24 @@ def load_augmentation(file_path, sampling_rate):
     return augmentation
 
 
-sampling_rate = 24414
+def augment_dataset(dataset_folder, augmentation_sounds_path):
+    sampling_rate = 24414
 
-augumentations = [
-    ('Engine.wav', 'engine', .3),
-    ('High Noise.wav', 'h_noise', .3),
-    ('Lenas Piano.wav', 'piano', .4),
-    ('Low Noise.wav', 'l_noise', .3),
-    ('People Talking.wav', 'talking', .4),
-]
+    augumentations = [
+        ('Engine.wav', 'engine', .3),
+        ('High Noise.wav', 'h_noise', .3),
+        ('Lenas Piano.wav', 'piano', .4),
+        ('Low Noise.wav', 'l_noise', .3),
+        ('People Talking.wav', 'talking', .4),
+    ]
 
-for file, name, ratio in augumentations:
-    augmentation = load_augmentation(os.path.join('augmentation_sounds', file), sampling_rate)
-    # augment_and_save_files_from_dir(DATA_FOLDER, f'../speech_augumented/{name} TESS Toronto',
-    #                                 augmentation, ratio, sampling_rate, 100)
-    augment_and_process_files_from_dir(DATA_FOLDER, f'data_list_{name}-{ratio}.npy',
-                                       augmentation, ratio, sampling_rate, 100)
+    for file, name, ratio in augumentations:
+        augmentation = load_augmentation(os.path.join(augmentation_sounds_path, file), sampling_rate)
+        # augment_and_save_files_from_dir(dataset_folder, f'../speech_augumented/{name} TESS Toronto',
+        #                                 augmentation, ratio, sampling_rate, 100)
+        augment_and_process_files_from_dir(dataset_folder, f'data_list_{name}-{ratio}.npy',
+                                           augmentation, ratio, sampling_rate, 100)
 
+
+if __name__ == '__main__':
+    augment_dataset(DATA_FOLDER, 'augmentation_sounds')
