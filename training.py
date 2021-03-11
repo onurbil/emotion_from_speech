@@ -268,7 +268,7 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
 
             print(print_string)
 
-    return np.mean(accuracies), accuracies, class_accuracies
+    return np.mean(accuracies), accuracies, class_accuracies, model
 
 
 def test_hyper_parameters_augmented(num_runs, clean_dataset_path, train_dataset_paths, test_dataset_path, batch_size,
