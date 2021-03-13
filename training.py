@@ -83,9 +83,9 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
     y = le.transform(y)
     test_y = le.transform(test_y)
     dataset = list(zip(x, y))
-    test_dataset = list(zip(test_x, test_y))
+    # test_dataset = list(zip(test_x, test_y))
 
-    indices = list(range(len(test_dataset)))
+    indices = list(range(len(test_x)))
     if shuffle_dataset:
         np.random.seed(random_seed)
         np.random.shuffle(indices)
@@ -96,13 +96,17 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
     train_indices = [index + ds * data_list_size for index, ds in zip(train_indices, train_ds)]
     val_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(val_indices))
     val_indices = [index + ds * data_list_size for index, ds in zip(val_indices, val_ds)]
+    test_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(val_indices))
+    test_indices = [index + ds * data_list_size for index, ds in zip(test_indices, test_ds)]
 
     print('data_list_size', data_list_size)
     print('np.min(train_ds)', np.min(train_ds), 'np.max(train_ds)', np.max(train_ds))
     print('np.min(val_ds)', np.min(val_ds), 'np.max(val_ds)', np.max(val_ds))
+    print('np.min(test_ds)', np.min(test_ds), 'np.max(test_ds)', np.max(test_ds))
 
     print('np.max(train_indices)', np.max(train_indices))
     print('np.max(val_indices)', np.max(val_indices))
+    print('np.max(test_indices)', np.max(test_indices))
 
     train_sampler = SubsetRandomSampler(train_indices)
     valid_sampler = SubsetRandomSampler(val_indices)
@@ -112,7 +116,7 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
                                                sampler=train_sampler, collate_fn=PadSequence())
     valid_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                                sampler=valid_sampler, collate_fn=PadSequence())
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
+    test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                               sampler=test_sampler, collate_fn=PadSequence())
 
     feature_num = x[0].shape[1]
@@ -354,7 +358,7 @@ if __name__ == '__main__':
     num_runs = 2
     patience = 20
     batch_size = 64
-    num_epochs = 2
+    num_epochs = 20
     learning_rate = 0.001
     weight_decay = 0.01
     model_args = {
@@ -372,7 +376,7 @@ if __name__ == '__main__':
                                               num_epochs=num_epochs,
                                               learning_rate=learning_rate,
                                               weight_decay=weight_decay,
-                                              model_cls=VanillaRNN,
+                                              model_cls=LSTM,
                                               model_args=model_args,
                                               device=device, patience=patience,
                                               verbose=1)
