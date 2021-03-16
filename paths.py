@@ -16,3 +16,5 @@ DATASET_DIR = Path(WORKING_DIR).parent
 ZIP_PATH = os.path.join(DATASET_DIR, 'archive.zip')
 # Data Folder:
 DATA_FOLDER = Path(os.path.join(DATASET_DIR, 'TESS Toronto emotional speech set data'))
+# Big Data Folder:
+BIG_DATA_FOLDER = Path(os.path.join(DATASET_DIR, 'Emotions'))
