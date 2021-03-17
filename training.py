@@ -41,7 +41,7 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
         np.random.seed(random_seed)
         np.random.shuffle(indices)
 
-    train_indices, val_indices, test_indices = indices[:2000], indices[2000:2200], indices[2200:]
+    train_indices, val_indices, test_indices = indices[:round(len(indices)*0.7143)], indices[round(len(indices)*0.7143):round(len(indices)*0.7858)], indices[round(len(indices)*0.7858):]
 
     train_sampler = SubsetRandomSampler(train_indices)
     valid_sampler = SubsetRandomSampler(val_indices)
