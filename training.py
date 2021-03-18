@@ -93,13 +93,15 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
         np.random.seed(random_seed)
         np.random.shuffle(indices)
 
-    train_indices, val_indices, test_indices = indices[:round(len(indices)*0.7143)], indices[round(len(indices)*0.7143):round(len(indices)*0.7858)], indices[round(len(indices)*0.7858):]
+    train_end_index = round(len(indices)*0.7143)
+    test_start_index = round(len(indices)*0.7858)
+    train_indices, val_indices, test_indices = indices[:train_end_index], indices[train_end_index:test_start_index], indices[test_start_index:]
 
     train_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(train_indices))
     train_indices = [index + ds * data_list_size for index, ds in zip(train_indices, train_ds)]
     val_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(val_indices))
     val_indices = [index + ds * data_list_size for index, ds in zip(val_indices, val_ds)]
-    test_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(val_indices))
+    test_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(test_indices))
     test_indices = [index + ds * data_list_size for index, ds in zip(test_indices, test_ds)]
 
     print('data_list_size', data_list_size)
@@ -350,14 +352,14 @@ if __name__ == '__main__':
         print('Failed to find GPU. Will use CPU.')
         device = 'cpu'
 
-    dataset_path = os.path.join('data_list.npy')
+    dataset_path = os.path.join('big_data_list.npy')
     train_dataset_paths = [
         dataset_path,
-        os.path.join('data_list_engine-0.3.npy'),
-        os.path.join('data_list_piano-0.4.npy'),
-        os.path.join('data_list_l_noise-0.3.npy'),
+        os.path.join('big_data_list_engine-0.3.npy'),
+        os.path.join('big_data_list_piano-0.4.npy'),
+        os.path.join('big_data_list_l_noise-0.3.npy'),
     ]
-    test_dataset_path = os.path.join('data_list_talking-0.4.npy')
+    test_dataset_path = os.path.join('big_data_list_talking-0.4.npy')
 
     ## Parameters:
     num_runs = 2
