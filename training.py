@@ -55,6 +55,9 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
                                               sampler=test_sampler, collate_fn=PadSequence())
 
     feature_num = x[0].shape[1]
+
+    print(f'Dataset loaded - train: {len(train_indices)}, val: {len(val_indices)}, test: {len(test_indices)}')
+
     return train_loader, valid_loader, test_loader, feature_num, le
 
 
@@ -90,7 +93,7 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
         np.random.seed(random_seed)
         np.random.shuffle(indices)
 
-    train_indices, val_indices, test_indices = indices[:2000], indices[2000:2200], indices[2200:]
+    train_indices, val_indices, test_indices = indices[:round(len(indices)*0.7143)], indices[round(len(indices)*0.7143):round(len(indices)*0.7858)], indices[round(len(indices)*0.7858):]
 
     train_ds = np.random.randint(0, len(train_dataset_paths) - 1, len(train_indices))
     train_indices = [index + ds * data_list_size for index, ds in zip(train_indices, train_ds)]
@@ -118,6 +121,7 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
                                                sampler=valid_sampler, collate_fn=PadSequence())
     test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                               sampler=test_sampler, collate_fn=PadSequence())
+    print(f'Augmented dataset loaded - train: {len(train_indices)}, val: {len(val_indices)}, test: {len(test_indices)}')
 
     feature_num = x[0].shape[1]
     return train_loader, valid_loader, test_loader, feature_num, le
