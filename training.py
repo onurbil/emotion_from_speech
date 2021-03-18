@@ -316,7 +316,8 @@ def test_hyper_parameters_augmented(num_runs, clean_dataset_path, train_dataset_
         print_test_results(clean_accuracies, clean_class_accuracies)
 
     return (np.mean(clean_accuracies), clean_accuracies, clean_class_accuracies,
-            np.mean(noise_accuracies), noise_accuracies, noise_class_accuracies)
+            np.mean(noise_accuracies), noise_accuracies, noise_class_accuracies,
+            model)
 
 
 def print_test_results(accuracies, class_accuracies):

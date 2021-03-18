@@ -6,7 +6,7 @@ import librosa
 import soundfile
 import tqdm
 
-from paths import DATA_FOLDER
+from paths import DATA_FOLDER, BIG_DATA_FOLDER
 import dataset
 
 
@@ -16,7 +16,7 @@ def augment_audio_files(original, second, second_ratio, augmented_fade_out=0):
         start = 0
         second_copy_size = second.size
         while start < augmented.size:
-            augmented[start:second_copy_size] = (original[start:second_copy_size] * (1 - second_ratio)
+            augmented[start:start + second_copy_size] = (original[start:start + second_copy_size] * (1 - second_ratio)
                                                  + second[:second_copy_size] * second_ratio)
             start += second.size
             second_copy_size = min(original.size - start, second.size)
@@ -54,18 +54,23 @@ def augment_and_save_files_from_dir(source_dir, target_dir, augmentation_audio, 
 
 
 def augment_and_process_files_from_dir(source_dir, data_filename, augmentation_audio, augmentation_rate, sampling_rate,
-                                       augmentation_fade_out=0):
+                                       augmentation_fade_out=0, cls_from_folder=False):
     class_dirs = os.listdir(source_dir)
 
     data_list = []
     for folder in tqdm.tqdm(class_dirs):
         cls_path = os.path.join(source_dir, folder)
 
+        if cls_from_folder:
+            cls = folder
+
         for file in os.listdir(cls_path):
             if not file.endswith('.wav'):
                 continue
 
-            cls = Path(file).stem.split('_', 2)[-1]
+            if not cls_from_folder:
+                cls = Path(file).stem.split('_', 2)[-1]
+
             file_path = os.path.join(cls_path, file)
             data, sampling_rate = librosa.load(file_path, sr=sampling_rate)
 
@@ -83,7 +88,7 @@ def load_augmentation(file_path, sampling_rate):
     return augmentation
 
 
-def augment_dataset(dataset_folder, augmentation_sounds_path):
+def augment_dataset(dataset_folder, augmentation_sounds_path, dataset_base_name='data_list', cls_from_folder=False):
     sampling_rate = 24414
 
     augumentations = [
@@ -95,12 +100,13 @@ def augment_dataset(dataset_folder, augmentation_sounds_path):
     ]
 
     for file, name, ratio in augumentations:
+        print(f'Augmenting with: {name}...')
         augmentation = load_augmentation(os.path.join(augmentation_sounds_path, file), sampling_rate)
         # augment_and_save_files_from_dir(dataset_folder, f'../speech_augumented/{name} TESS Toronto',
         #                                 augmentation, ratio, sampling_rate, 100)
-        augment_and_process_files_from_dir(dataset_folder, f'data_list_{name}-{ratio}.npy',
-                                           augmentation, ratio, sampling_rate, 100)
+        augment_and_process_files_from_dir(dataset_folder, f'{dataset_base_name}_{name}-{ratio}.npy',
+                                           augmentation, ratio, sampling_rate, 100, cls_from_folder)
 
 
 if __name__ == '__main__':
-    augment_dataset(DATA_FOLDER, 'augmentation_sounds')
+    augment_dataset(BIG_DATA_FOLDER, 'augmentation_sounds', dataset_base_name='big_data_list', cls_from_folder=True)

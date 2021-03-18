@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 from paths import BIG_DATA_FOLDER
 import librosa
+import tqdm
 
 
 """
@@ -46,7 +47,7 @@ def process_dataset():
     class_dir = os.listdir(BIG_DATA_FOLDER)
 
     data_list = []
-    for folder in class_dir:
+    for folder in tqdm.tqdm(class_dir):
 
         cls_path = os.path.join(BIG_DATA_FOLDER, folder)
         cls = folder
