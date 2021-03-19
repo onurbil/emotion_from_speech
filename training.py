@@ -57,7 +57,7 @@ def load_dataset(dataset_path, batch_size, shuffle_dataset=True, random_seed=42)
     feature_num = x[0].shape[1]
 
     print(f'Dataset loaded - train: {len(train_indices)}, val: {len(val_indices)}, test: {len(test_indices)}')
-
+    print(f'\tfeature_num: {feature_num}, classes_num: {len(le.classes_)}')
     return train_loader, valid_loader, test_loader, feature_num, le
 
 
@@ -123,9 +123,11 @@ def load_augmented_dataset(train_dataset_paths, test_dataset_path, batch_size, s
                                                sampler=valid_sampler, collate_fn=PadSequence())
     test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                               sampler=test_sampler, collate_fn=PadSequence())
-    print(f'Augmented dataset loaded - train: {len(train_indices)}, val: {len(val_indices)}, test: {len(test_indices)}')
 
     feature_num = x[0].shape[1]
+
+    print(f'Augmented dataset loaded - train: {len(train_indices)}, val: {len(val_indices)}, test: {len(test_indices)}')
+    print(f'\tfeature_num: {feature_num}, classes_num: {len(le.classes_)}')
     return train_loader, valid_loader, test_loader, feature_num, le
 
 
@@ -365,7 +367,7 @@ if __name__ == '__main__':
     num_runs = 2
     patience = 20
     batch_size = 64
-    num_epochs = 20
+    num_epochs = 1
     learning_rate = 0.001
     weight_decay = 0.01
     model_args = {
