@@ -24,11 +24,11 @@ Folder structure must be as following:
 """
 
 
-def calculate_features(data, sr, n_mfcc, order):
+def calculate_features(data, sr, n_mfcc):
     mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=n_mfcc)
     # First order and second order and energy features.
-    mfcc_delta = librosa.feature.delta(mfcc, order=order)
-    mfcc_delta2 = librosa.feature.delta(mfcc, order=order)
+    mfcc_delta = librosa.feature.delta(mfcc, order=1)
+    mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
     energy = librosa.feature.rms(data)
 
     features = np.concatenate((mfcc, mfcc_delta, mfcc_delta2, energy), axis=0)
@@ -64,18 +64,8 @@ def process_dataset():
                 if sr != sampling_rate:
                     # This loop is for OAF_food_fear.wav, which has sr of 96000 Hz.
                     data, sr = librosa.load(file_path, sr=sampling_rate)
-
-                # mfcc = librosa.feature.mfcc(data, sr=sr, n_mfcc=20)
-                # # First order and second order and energy features.
-                # mfcc_delta = librosa.feature.delta(mfcc, order=1)
-                # mfcc_delta2 = librosa.feature.delta(mfcc, order=2)
-                # energy = librosa.feature.rms(data)
-                #
-                # features = np.concatenate((mfcc,mfcc_delta,mfcc_delta2,energy), axis=0)
-                # # Bring to sample x sequence x features for LSTM:
-                # features = features.T
                 
-                features = calculate_features(data, sr, n_mfcc=20, order=1)
+                features = calculate_features(data, sr, n_mfcc=20)
                 data_list.append([features, cls])
 
     data_list = np.array(data_list, dtype=object)
