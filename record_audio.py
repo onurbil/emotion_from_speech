@@ -120,7 +120,7 @@ def save_audio(DATA_PATH, name = 'recording'):
     sound = sound.set_frame_rate(24414)
     sound.export(wav, format='wav')
     data, sr = librosa.load(wav, sr=24414)
-    features = calculate_features(data, sr, n_mfcc=20, order=1)
+    features = calculate_features(data, sr, n_mfcc=20)
     data_list.append([features, cls])
     data_list = np.array(data_list, dtype=object)
     np.save(npy, data_list)
