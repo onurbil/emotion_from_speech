@@ -255,7 +255,7 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
     model_args['classes'] = classes
 
     loss = torch.nn.CrossEntropyLoss()
-
+    bestAcc = 0
     accuracies = []
     class_accuracies = []
     for run in range(num_runs):
@@ -266,6 +266,10 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
         accuracy, class_acc = test_model(model, test_loader, classes, le, device, verbose=verbose)
         accuracies.append(accuracy)
         class_accuracies.append(class_acc)
+
+        if accuracy > bestAcc:
+            bestAcc = accuracy
+            bestModel = copy.deepcopy(model)
 
     if verbose >= 1:
         print(
@@ -278,7 +282,7 @@ def test_hyper_parameters(num_runs, dataset_path, batch_size,
 
             print(print_string)
 
-    return np.mean(accuracies), accuracies, class_accuracies, model
+    return np.mean(accuracies), accuracies, class_accuracies, bestModel
 
 
 def test_hyper_parameters_augmented(num_runs, clean_dataset_path, train_dataset_paths, test_dataset_path, batch_size,
