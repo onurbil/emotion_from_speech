@@ -18,7 +18,7 @@ class PadSequence:
         x = [ix[0] for ix in batch]
         y = [iy[1] for iy in batch]
         y = torch.LongTensor(y)
-
+        
         padded = rnn_utils.pad_sequence(x, batch_first=True)
         sorted_batch_lengths = [len(p) for p in padded]
         packed = rnn_utils.pack_padded_sequence(padded, sorted_batch_lengths, batch_first=True, enforce_sorted=False)
