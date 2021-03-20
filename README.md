@@ -10,3 +10,8 @@ Run Emotion from Speech:
 ```
 python main.py
 ```
+
+To test your emotion run the Google Colab link:
+```
+https://colab.research.google.com/drive/1MxogoIVqHh79ajOIP7CXbWSTXEDB_Reb?usp=sharing
+```
