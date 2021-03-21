@@ -76,7 +76,7 @@ def augment_and_process_files_from_dir(source_dir, data_filename, augmentation_a
 
             augmented_audio = augment_audio_files(data, augmentation_audio, augmentation_rate, augmentation_fade_out)
 
-            features = dataset.calculate_features(augmented_audio, sampling_rate, n_mfcc=20, order=1)
+            features = dataset.calculate_features(augmented_audio, sampling_rate, n_mfcc=20)
             data_list.append([features, cls])
 
     data_list = np.array(data_list, dtype=object)
@@ -109,4 +109,4 @@ def augment_dataset(dataset_folder, augmentation_sounds_path, dataset_base_name=
 
 
 if __name__ == '__main__':
-    augment_dataset(BIG_DATA_FOLDER, 'augmentation_sounds', dataset_base_name='big_data_list', cls_from_folder=True)
+    augment_dataset(DATA_FOLDER, 'augmentation_sounds', dataset_base_name='data_list', cls_from_folder=False)

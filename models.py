@@ -127,7 +127,6 @@ if __name__ == '__main__':
         models.append(model)
 
     ensemble = Ensemble(models)
-
     accuracy, classes_accuracies = training.test_model(ensemble, test_loader, len(le.classes_), le, device)
     print('accuracy', accuracy)
     print('classes_accuracies', classes_accuracies)
